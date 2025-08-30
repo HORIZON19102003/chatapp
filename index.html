@@ -33,26 +33,27 @@
     }
     @keyframes drift{ from{transform:translateY(0)} to{transform:translateY(-1200px)} }
 
-    .app{position:relative;z-index:1;max-width:980px;margin:28px auto;padding:18px;box-sizing:border-box;}
-    .card{background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.55));border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:600px;border:1px solid rgba(0,255,106,0.06);box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+  .app{position:relative;z-index:1;max-width:980px;margin:24px auto;padding:12px;box-sizing:border-box;width:calc(100% - 24px);}
+  .card{background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.55));border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:calc(70vh);max-height:calc(100vh - 48px);border:1px solid rgba(0,255,106,0.06);box-shadow:0 10px 40px rgba(0,0,0,0.6)}
 
     /* Header */
-    .card-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(0,255,106,0.04)}
+  .card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(0,255,106,0.04)}
     .brand{display:flex;align-items:center;gap:14px}
     .brand .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#00250f,#00451c);display:flex;align-items:center;justify-content:center;color:var(--neon);font-weight:800}
-    .brand .title{font-size:18px;font-weight:700;color:var(--neon)}
-    .brand .sub{font-size:12px;color:var(--muted)}
+  .brand .title{font-size:clamp(16px,2.2vw,20px);font-weight:700;color:var(--neon)}
+  .brand .sub{font-size:clamp(11px,1.6vw,13px);color:var(--muted)}
 
     .header-actions{display:flex;gap:10px;align-items:center}
     .status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
     .dot{width:10px;height:10px;border-radius:50%;background:var(--neon);box-shadow:0 0 12px var(--neon)}
 
     /* Body */
-    .card-body{display:grid;grid-template-columns: 1fr 300px;gap:18px;padding:18px}
+  .card-body{display:grid;grid-template-columns: 1fr 300px;gap:12px;padding:12px}
 
     /* Messages area */
-    .messages-panel{background:transparent;border-radius:10px;padding:12px;display:flex;flex-direction:column;height:520px;border:1px solid rgba(0,255,106,0.04)}
-    .messages-list{flex:1;overflow:auto;padding:8px 12px;display:flex;flex-direction:column;gap:10px}
+  /* messages-panel uses viewport to keep layout consistent on mobile */
+  .messages-panel{background:transparent;border-radius:10px;padding:8px;display:flex;flex-direction:column;min-height:320px;max-height:calc(100vh - 240px);border:1px solid rgba(0,255,106,0.04)}
+  .messages-list{flex:1;overflow:auto;padding:8px 10px;display:flex;flex-direction:column;gap:10px}
     .msg{max-width:75%;padding:12px 14px;border-radius:12px;backdrop-filter: blur(4px);}
     .msg.me{align-self:flex-end;color:#001b0f}
     .msg.other{align-self:flex-start;color:var(--neon)}
@@ -65,18 +66,30 @@
     .info{font-size:13px;color:var(--muted);line-height:1.5}
 
     /* Composer */
-    .composer{display:flex;gap:10px;padding:12px 18px;border-top:1px solid rgba(0,255,106,0.03);align-items:center}
-    .composer input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(0,255,106,0.08);background:rgba(0,0,0,0.36);color:var(--neon);font-size:14px}
+  .composer{display:flex;gap:10px;padding:10px;border-top:1px solid rgba(0,255,106,0.03);align-items:center;position:sticky;bottom:0;background:linear-gradient(180deg, rgba(0,0,0,0.0), rgba(0,0,0,0.06));backdrop-filter: blur(6px)}
+  .composer input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(0,255,106,0.08);background:rgba(0,0,0,0.36);color:var(--neon);font-size:clamp(14px,2.2vw,16px)}
     .composer input::placeholder{color:rgba(0,255,106,0.45)}
     .composer button{background:var(--neon);color:#001b0f;border:none;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer}
     .composer button.secondary{background:transparent;border:1px solid rgba(0,255,106,0.08);color:var(--neon)}
 
     /* Responsive */
-    @media (max-width:880px){
+    @media (max-width:980px){
       .card-body{grid-template-columns:1fr;}
       .sidebar{order:2;height:auto}
-      .messages-panel{height:520px}
+      .messages-panel{max-height:calc(100vh - 240px)}
+      .sidebar{display:none}
+      .sidebar.visible{display:block;position:fixed;right:12px;top:84px;width:82%;max-width:360px;z-index:12;background:linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));border-radius:10px;padding:12px;border:1px solid rgba(0,255,106,0.06)}
+      .card{max-width:98vw;margin:8px}
     }
+
+    /* small devices adjustments */
+    @media (max-width:520px){
+      .brand .logo{width:36px;height:36px}
+      .composer button{padding:10px 12px}
+      .messages-panel{padding:6px}
+    }
+    /* safe area for iOS */
+    body{padding-bottom:env(safe-area-inset-bottom)}
   </style>
 </head>
 <body>
@@ -92,6 +105,7 @@
         </div>
         <div class="header-actions">
           <div class="status"><span class="dot"></span><span>Connected</span></div>
+          <button id="sidebarToggle" class="secondary" style="margin-left:8px;">Info</button>
           <button id="leaveBtn" class="secondary" style="margin-left:8px;">Leave</button>
         </div>
       </div>
@@ -289,6 +303,29 @@
       // show modal to rejoin
       showModal();
     });
+
+    // Responsive: sidebar toggle for small screens
+    const sidebarEl = document.querySelector('.sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    sidebarToggle?.addEventListener('click', ()=>{
+      if(window.innerWidth <= 980){
+        sidebarEl.classList.toggle('visible');
+      } else {
+        // on large screens, briefly flash
+        sidebarEl.style.transition = 'box-shadow 0.25s';
+        sidebarEl.style.boxShadow = '0 6px 20px rgba(0,255,106,0.05)';
+        setTimeout(()=> sidebarEl.style.boxShadow = '', 400);
+      }
+    });
+
+    // Ensure composer visible when virtual keyboard opens on mobile (best-effort)
+    window.addEventListener('resize', ()=>{
+      // scroll messages area to bottom so composer remains visible
+      setTimeout(()=> messagesDiv.scrollTop = messagesDiv.scrollHeight, 200);
+    });
+
+    // Tap the messages area to hide sidebar on mobile
+    messagesDiv.addEventListener('click', ()=>{ if(window.innerWidth <= 980) sidebarEl.classList.remove('visible'); });
   </script>
 </body>
 </html>
