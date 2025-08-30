@@ -173,16 +173,19 @@
 
   // Create modal dynamically (so it's easy to show/hide)
   let username = localStorage.getItem('chat_username') || '';
+  let authorized = localStorage.getItem('chat_authorized') === '1';
   // session management: when user 'joins' we set sessionStart; leaving clears it
   let sessionStart = Number(localStorage.getItem('chat_session_start')) || null;
   let unsubscribe = null;
     const modal = document.createElement('div');
     modal.style.position = 'fixed'; modal.style.inset = '0'; modal.style.display = 'flex'; modal.style.alignItems = 'center'; modal.style.justifyContent = 'center'; modal.style.background = 'rgba(10,20,30,0.45)'; modal.style.zIndex = 9999;
     modal.innerHTML = `
-      <div style="background:linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));padding:20px;border-radius:12px;min-width:320px;box-shadow:0 12px 40px rgba(0,255,106,0.06);border:1px solid rgba(0,255,106,0.06);">
-        <h3 style="margin:0 0 8px 0;color:var(--neon)">Enter display name</h3>
-        <p style="margin:0 0 12px 0;color:var(--muted);font-size:13px">Pick a hacker handle (eg. opoup)</p>
-        <input id="_usernameInput" placeholder="Your handle" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(0,255,106,0.06);margin-bottom:10px;background:rgba(0,0,0,0.45);color:var(--neon);font-size:14px" />
+      <div style="background:linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));padding:18px;border-radius:12px;min-width:320px;box-shadow:0 12px 40px rgba(0,255,106,0.06);border:1px solid rgba(0,255,106,0.06);">
+        <h3 style="margin:0 0 8px 0;color:var(--neon)">Enter credentials</h3>
+        <p style="margin:0 0 10px 0;color:var(--muted);font-size:13px">Password is required to enter this channel.</p>
+        <input id="_passwordInput" type="password" placeholder="Password" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(0,255,106,0.06);margin-bottom:8px;background:rgba(0,0,0,0.45);color:var(--neon);font-size:14px" />
+        <input id="_usernameInput" placeholder="Your handle" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(0,255,106,0.06);margin-bottom:6px;background:rgba(0,0,0,0.45);color:var(--neon);font-size:14px" />
+        <div style="height:18px"><span id="_authError" style="color:#ff6b6b;font-size:13px;display:none"></span></div>
         <div style="display:flex;gap:8px;justify-content:flex-end">
           <button id="_usernameSave" style="padding:8px 12px;border-radius:8px;background:var(--neon);color:#001b0f;border:none">Boot</button>
         </div>
@@ -191,20 +194,32 @@
     document.body.appendChild(modal);
     const usernameInput = document.getElementById('_usernameInput');
     const usernameSave = document.getElementById('_usernameSave');
-    function showModal(){ modal.style.display = 'flex'; usernameInput.focus(); }
-    function hideModal(){ modal.style.display = 'none'; }
-    if(!username){ showModal(); } else { hideModal(); }
+  function showModal(){ modal.style.display = 'flex'; const pw = document.getElementById('_passwordInput'); setTimeout(()=> pw && pw.focus(), 80); }
+  function hideModal(){ modal.style.display = 'none'; }
+  // only allow joining if authorized
+  if(!authorized){ showModal(); } else { hideModal(); }
     usernameInput.value = username;
     usernameSave.addEventListener('click', ()=>{
-      const v = usernameInput.value.trim() || 'Guest'; username = v; localStorage.setItem('chat_username', username);
+      const pw = document.getElementById('_passwordInput').value || '';
+      const v = usernameInput.value.trim() || 'Guest';
+      // enforce password exactly 'Dian'
+      if(pw !== 'Dian'){
+        const err = document.getElementById('_authError'); err.textContent = 'Incorrect password.'; err.style.display = 'inline';
+        document.getElementById('_passwordInput').style.borderColor = '#ff6b6b';
+        return;
+      }
+      // authorized
+      authorized = true; localStorage.setItem('chat_authorized','1');
+      username = v; localStorage.setItem('chat_username', username);
       // start a new session
       sessionStart = Date.now(); localStorage.setItem('chat_session_start', String(sessionStart));
-      hideModal();
-      startListener();
+      hideModal(); startListener();
     });
-    // allow Enter key in modal
+    // allow Enter key in password or username fields
     usernameInput.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ usernameSave.click(); } });
-    changeUserBtn.addEventListener('click', ()=>{ usernameInput.value = username || ''; showModal(); });
+    const passField = document.getElementById('_passwordInput');
+    passField.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ usernameSave.click(); } });
+  changeUserBtn.addEventListener('click', ()=>{ usernameInput.value = username || ''; showModal(); });
 
     // Render messages
     function addMessageToList(text, author='Guest', myName='', ts=null){
