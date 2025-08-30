@@ -1,24 +1,118 @@
-<!-- 1_index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Anonymous Chat</title>
-  <link rel="stylesheet" href="/style.css" />
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat — Live</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#f3f6f9;
+      --panel:#ffffff;
+      --accent:#0b61a4;
+      --muted:#7a8a99;
+      --success:#2ecc71;
+      --danger:#e74c3c;
+      --glass: rgba(11,97,164,0.06);
+      --radius:12px;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color: #2b3b43;
+    }
+
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#f6f9fc 0%,var(--bg) 100%);}
+    .app{
+      max-width:980px;margin:28px auto;padding:18px;box-sizing:border-box;
+    }
+    .card{
+      background:var(--panel);border-radius:var(--radius);box-shadow:0 8px 30px rgba(20,40,60,0.06);overflow:hidden;
+      display:flex;flex-direction:column;min-height:600px;
+    }
+
+    /* Header */
+    .card-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef3f7}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand .logo{width:44px;height:44px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .brand .title{font-size:18px;font-weight:700}
+    .brand .sub{font-size:12px;color:var(--muted)}
+
+    .header-actions{display:flex;gap:10px;align-items:center}
+    .status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 0 4px rgba(46,204,113,0.08)}
+
+    /* Body */
+    .card-body{display:grid;grid-template-columns: 1fr 320px;gap:18px;padding:18px}
+
+    /* Messages area */
+    .messages-panel{background:linear-gradient(180deg,#fbfdff,#ffffff);border-radius:10px;padding:14px;display:flex;flex-direction:column;height:520px}
+    .messages-list{flex:1;overflow:auto;padding:8px 6px;display:flex;flex-direction:column;gap:10px}
+    .msg{max-width:72%;padding:10px 12px;border-radius:12px;box-shadow:0 4px 14px rgba(10,20,30,0.04);}
+    .msg.me{align-self:flex-end;background:linear-gradient(180deg,var(--accent),#0e73c7);color:white;border-bottom-right-radius:4px}
+    .msg.other{align-self:flex-start;background:linear-gradient(180deg,#ffffff,#f8fbff);color:var(--muted);border-bottom-left-radius:4px}
+    .msg .meta{font-size:11px;color:rgba(0,0,0,0.45);margin-bottom:6px}
+    .msg .text{font-size:14px;line-height:1.4}
+    .msg .time{font-size:11px;color:rgba(0,0,0,0.35);margin-top:6px;text-align:right}
+
+    /* Sidebar */
+    .sidebar{background:var(--panel);border-radius:10px;padding:12px;height:520px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
+    .sidebar h4{margin:4px 0 8px 0;font-size:13px}
+    .info{font-size:13px;color:var(--muted);line-height:1.5}
+
+    /* Composer */
+    .composer{display:flex;gap:10px;padding:12px 18px;border-top:1px solid #eef3f7;align-items:center}
+    .composer input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid #e6eef3;background:transparent;font-size:14px}
+    .composer button{background:var(--accent);color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer}
+    .composer button.secondary{background:transparent;border:1px solid #d8e6f2;color:var(--accent)}
+
+    /* Responsive */
+    @media (max-width:880px){
+      .card-body{grid-template-columns:1fr;}
+      .sidebar{order:2;height:auto}
+      .messages-panel{height:520px}
+    }
+  </style>
 </head>
 <body>
-  <div id="chat-container">
-    <h2>Anonymous Chat</h2>
-    <div id="messages"></div>
-    <input id="messageInput" type="text" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
+  <div class="app">
+    <div class="card">
+      <div class="card-header">
+        <div class="brand">
+          <div class="logo">C</div>
+          <div>
+            <div class="title">Live Chat</div>
+            <div class="sub">Anonymous channel</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="status"><span class="dot"></span><span>Connected</span></div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="messages-panel">
+          <div id="messages" class="messages-list" aria-live="polite"></div>
+
+          <div class="composer">
+            <input id="messageInput" type="text" placeholder="Write a message and press Enter..." autocomplete="off" />
+            <button id="sendBtn">Send</button>
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <h4>About this room</h4>
+          <div class="info">This is a lightweight anonymous chat demo. Messages are not stored locally. Be kind — no abusive language. This UI uses Firebase Firestore for real-time updates.</div>
+
+          <hr style="margin:14px 0;border:none;border-top:1px solid #f0f6fa">
+          <h4>Quick commands</h4>
+          <div class="info">Press <strong>Enter</strong> to send. Click <strong>Send</strong> to submit. Resize the window — the layout adapts.</div>
+        </aside>
+      </div>
+    </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
-    // Firebase config from your Firebase Console
+    // Firebase config - keep original keys if you have them; placeholder here
     const firebaseConfig = {
       apiKey: "AIzaSyAhF-2yoJIvQ619UHN_cc7cYdAUG8eH1r8",
       authDomain: "chat-app-b19ef.firebaseapp.com",
@@ -31,31 +125,49 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const messagesDiv = document.getElementById("messages");
+
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    function formatTime(ts){
+      if(!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    }
+
+    function addMessageToList(text, me=false, ts=null){
+      const el = document.createElement('div');
+      el.className = 'msg ' + (me ? 'me' : 'other');
+      const meta = document.createElement('div'); meta.className='meta'; meta.textContent = me ? 'You' : 'Guest';
+      const txt = document.createElement('div'); txt.className='text'; txt.textContent = text;
+      const time = document.createElement('div'); time.className='time'; time.textContent = formatTime(ts);
+      el.appendChild(meta); el.appendChild(txt); el.appendChild(time);
+      messagesDiv.appendChild(el);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
 
     // Listen for new messages
-    db.collection("messages").orderBy("timestamp")
+    db.collection('messages').orderBy('timestamp')
       .onSnapshot(snapshot => {
-        messagesDiv.innerHTML = "";
+        messagesDiv.innerHTML = '';
         snapshot.forEach(doc => {
-          const p = document.createElement("p");
-          p.textContent = doc.data().text;
-          messagesDiv.appendChild(p);
+          const data = doc.data();
+          addMessageToList(data.text, false, data.timestamp);
         });
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-      });
+      }, err => console.error(err));
 
-    function sendMessage() {
-      const input = document.getElementById("messageInput");
-      const msg = input.value;
-      if (msg.trim()) {
-        db.collection("messages").add({
-          text: msg,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        input.value = "";
-      }
+    function sendMessage(){
+      const msg = input.value.trim();
+      if(!msg) return;
+      sendBtn.disabled = true;
+      db.collection('messages').add({ text: msg, timestamp: firebase.firestore.FieldValue.serverTimestamp() })
+        .then(()=>{ input.value=''; input.focus(); sendBtn.disabled=false; })
+        .catch(e=>{ console.error(e); sendBtn.disabled=false; });
     }
+
+    sendBtn.addEventListener('click', sendMessage);
+    input.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); } });
   </script>
 </body>
 </html>
