@@ -94,6 +94,7 @@
           <div class="composer">
             <input id="messageInput" type="text" placeholder="Write a message and press Enter..." autocomplete="off" />
             <button id="sendBtn">Send</button>
+            <button id="changeUserBtn" class="secondary">Change Name</button>
           </div>
         </div>
 
@@ -112,7 +113,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
-    // Firebase config - keep original keys if you have them; placeholder here
+    // Firebase config - keep original keys
     const firebaseConfig = {
       apiKey: "AIzaSyAhF-2yoJIvQ619UHN_cc7cYdAUG8eH1r8",
       authDomain: "chat-app-b19ef.firebaseapp.com",
@@ -126,9 +127,19 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // Elements
     const messagesDiv = document.getElementById('messages');
     const input = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
+    const changeUserBtn = document.getElementById('changeUserBtn');
+
+    // Color palette for usernames
+    const palette = ['#ffd166','#06d6a0','#ef476f','#118ab2','#06b6d4','#f59e0b','#a78bfa','#f97316','#34d399','#fb7185'];
+    function colorForName(name){
+      let h = 0;
+      for(let i=0;i<name.length;i++) h = (h<<5) - h + name.charCodeAt(i);
+      return palette[Math.abs(h) % palette.length];
+    }
 
     function formatTime(ts){
       if(!ts) return '';
@@ -136,15 +147,81 @@
       return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     }
 
-    function addMessageToList(text, me=false, ts=null){
-      const el = document.createElement('div');
-      el.className = 'msg ' + (me ? 'me' : 'other');
-      const meta = document.createElement('div'); meta.className='meta'; meta.textContent = me ? 'You' : 'Guest';
-      const txt = document.createElement('div'); txt.className='text'; txt.textContent = text;
-      const time = document.createElement('div'); time.className='time'; time.textContent = formatTime(ts);
-      el.appendChild(meta); el.appendChild(txt); el.appendChild(time);
-      messagesDiv.appendChild(el);
+    // Create modal dynamically (so it's easy to show/hide)
+    let username = localStorage.getItem('chat_username') || '';
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed'; modal.style.inset = '0'; modal.style.display = 'flex'; modal.style.alignItems = 'center'; modal.style.justifyContent = 'center'; modal.style.background = 'rgba(10,20,30,0.45)'; modal.style.zIndex = 9999;
+    modal.innerHTML = `
+      <div style="background:white;padding:20px;border-radius:12px;min-width:320px;box-shadow:0 12px 40px rgba(10,20,30,0.35);">
+        <h3 style="margin:0 0 8px 0">Enter display name</h3>
+        <p style="margin:0 0 12px 0;color:#667788;font-size:13px">Pick a name that others will see (eg. opoup)</p>
+        <input id="_usernameInput" placeholder="Your name" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef3;margin-bottom:10px;font-size:14px" />
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button id="_usernameSave" style="padding:8px 12px;border-radius:8px;background:#0b61a4;color:white;border:none">Start</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    const usernameInput = document.getElementById('_usernameInput');
+    const usernameSave = document.getElementById('_usernameSave');
+    function showModal(){ modal.style.display = 'flex'; usernameInput.focus(); }
+    function hideModal(){ modal.style.display = 'none'; }
+    if(!username){ showModal(); } else { hideModal(); }
+    usernameInput.value = username;
+    usernameSave.addEventListener('click', ()=>{
+      const v = usernameInput.value.trim() || 'Guest'; username = v; localStorage.setItem('chat_username', username); hideModal();
+    });
+    // allow Enter key in modal
+    usernameInput.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ usernameSave.click(); } });
+    changeUserBtn.addEventListener('click', ()=>{ usernameInput.value = username || ''; showModal(); });
+
+    // Render messages
+    function addMessageToList(text, author='Guest', myName='', ts=null){
+      const me = (author === myName);
+      const wrapper = document.createElement('div');
+      wrapper.className = 'msg ' + (me ? 'me' : 'other');
+
+      // author/meta row
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const badge = document.createElement('span'); badge.style.display='inline-block'; badge.style.width='10px'; badge.style.height='10px'; badge.style.borderRadius='50%'; badge.style.background = colorForName(author); badge.style.marginRight='8px'; badge.style.verticalAlign='middle';
+      const nameNode = document.createElement('strong'); nameNode.style.fontWeight='600'; nameNode.style.marginRight='6px';
+      if(me){
+        // show 'You (username)'
+        nameNode.textContent = 'You';
+        const small = document.createElement('span'); small.style.fontWeight='400'; small.style.marginLeft='6px'; small.style.color='rgba(255,255,255,0.85)'; small.style.fontSize='12px'; small.textContent = `(${author})`;
+        // For contrast when on white (non-me), keep small muted
+        if(!wrapper.classList.contains('me')) small.style.color = 'rgba(0,0,0,0.45)';
+        meta.appendChild(badge); meta.appendChild(nameNode); meta.appendChild(small);
+      } else {
+        nameNode.textContent = author;
+        const timeNode = document.createElement('span'); timeNode.style.marginLeft='8px'; timeNode.style.color='rgba(0,0,0,0.35)'; timeNode.style.fontSize='11px'; timeNode.textContent = formatTime(ts);
+        meta.appendChild(badge); meta.appendChild(nameNode); meta.appendChild(timeNode);
+      }
+
+      const txt = document.createElement('div'); txt.className = 'text'; txt.textContent = text;
+
+      // styles: colorful bubbles
+      if(me){
+        wrapper.style.background = `linear-gradient(180deg, ${colorForName(author)}, ${shadeColor(colorForName(author), -12)})`;
+        wrapper.style.color = 'white';
+        wrapper.style.alignSelf = 'flex-end';
+      } else {
+        wrapper.style.background = '#fff';
+        wrapper.style.border = `1px solid ${shadeColor(colorForName(author), 60)}`;
+        wrapper.style.alignSelf = 'flex-start';
+      }
+
+      wrapper.appendChild(meta); wrapper.appendChild(txt);
+      messagesDiv.appendChild(wrapper);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // small color utility to lighten/darken hex
+    function shadeColor(hex, percent) {
+      const f = hex.slice(1), t = percent < 0 ? 0 : 255, p = Math.abs(percent) / 100;
+      const R = parseInt(f.substring(0,2),16), G = parseInt(f.substring(2,4),16), B = parseInt(f.substring(4,6),16);
+      const r = Math.round((t - R) * p) + R; const g = Math.round((t - G) * p) + G; const b = Math.round((t - B) * p) + B;
+      return `rgb(${r}, ${g}, ${b})`;
     }
 
     // Listen for new messages
@@ -153,15 +230,17 @@
         messagesDiv.innerHTML = '';
         snapshot.forEach(doc => {
           const data = doc.data();
-          addMessageToList(data.text, false, data.timestamp);
+          addMessageToList(data.text, data.username || 'Guest', username, data.timestamp);
         });
       }, err => console.error(err));
 
+    // Send message
     function sendMessage(){
+      if(!username) { showModal(); return; }
       const msg = input.value.trim();
       if(!msg) return;
       sendBtn.disabled = true;
-      db.collection('messages').add({ text: msg, timestamp: firebase.firestore.FieldValue.serverTimestamp() })
+      db.collection('messages').add({ text: msg, username: username || 'Guest', timestamp: firebase.firestore.FieldValue.serverTimestamp() })
         .then(()=>{ input.value=''; input.focus(); sendBtn.disabled=false; })
         .catch(e=>{ console.error(e); sendBtn.disabled=false; });
     }
