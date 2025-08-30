@@ -7,61 +7,69 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#f3f6f9;
-      --panel:#ffffff;
-      --accent:#0b61a4;
-      --muted:#7a8a99;
-      --success:#2ecc71;
-      --danger:#e74c3c;
-      --glass: rgba(11,97,164,0.06);
-      --radius:12px;
+      --bg-1: #02110b;
+      --bg-2: #00120a;
+      --panel: rgba(0,0,0,0.45);
+      --neon: #00ff6a;
+      --neon-dim: rgba(0,255,106,0.12);
+      --muted: #7fb29a;
+      --radius:10px;
       font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-      color: #2b3b43;
+      color: #c7f7d9;
     }
 
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,#f6f9fc 0%,var(--bg) 100%);}
-    .app{
-      max-width:980px;margin:28px auto;padding:18px;box-sizing:border-box;
+    html,body{height:100%;margin:0;background:#000;overflow:hidden}
+    /* animated matrix-like background */
+    body::before{
+      content:'';position:fixed;inset:0;background:
+        radial-gradient(ellipse at 10% 10%, rgba(0,255,106,0.04), transparent 8%),
+        radial-gradient(ellipse at 90% 80%, rgba(0,255,106,0.03), transparent 18%);
+      z-index:0;pointer-events:none;mix-blend-mode:screen;
     }
-    .card{
-      background:var(--panel);border-radius:var(--radius);box-shadow:0 8px 30px rgba(20,40,60,0.06);overflow:hidden;
-      display:flex;flex-direction:column;min-height:600px;
+    /* subtle moving lines */
+    .matrix {
+      position:fixed;inset:0;z-index:0;opacity:0.12;background-image:linear-gradient(rgba(0,255,106,0.06) 1px, transparent 1px);background-size:1px 24px;filter:blur(1px);
+      animation: drift 18s linear infinite;
     }
+    @keyframes drift{ from{transform:translateY(0)} to{transform:translateY(-1200px)} }
+
+    .app{position:relative;z-index:1;max-width:980px;margin:28px auto;padding:18px;box-sizing:border-box;}
+    .card{background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(0,0,0,0.55));border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:600px;border:1px solid rgba(0,255,106,0.06);box-shadow:0 10px 40px rgba(0,0,0,0.6)}
 
     /* Header */
-    .card-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid #eef3f7}
+    .card-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid rgba(0,255,106,0.04)}
     .brand{display:flex;align-items:center;gap:14px}
-    .brand .logo{width:44px;height:44px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
-    .brand .title{font-size:18px;font-weight:700}
+    .brand .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#00250f,#00451c);display:flex;align-items:center;justify-content:center;color:var(--neon);font-weight:800}
+    .brand .title{font-size:18px;font-weight:700;color:var(--neon)}
     .brand .sub{font-size:12px;color:var(--muted)}
 
     .header-actions{display:flex;gap:10px;align-items:center}
     .status{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:8px}
-    .dot{width:10px;height:10px;border-radius:50%;background:var(--success);box-shadow:0 0 0 4px rgba(46,204,113,0.08)}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--neon);box-shadow:0 0 12px var(--neon)}
 
     /* Body */
-    .card-body{display:grid;grid-template-columns: 1fr 320px;gap:18px;padding:18px}
+    .card-body{display:grid;grid-template-columns: 1fr 300px;gap:18px;padding:18px}
 
     /* Messages area */
-    .messages-panel{background:linear-gradient(180deg,#fbfdff,#ffffff);border-radius:10px;padding:14px;display:flex;flex-direction:column;height:520px}
-    .messages-list{flex:1;overflow:auto;padding:8px 6px;display:flex;flex-direction:column;gap:10px}
-    .msg{max-width:72%;padding:10px 12px;border-radius:12px;box-shadow:0 4px 14px rgba(10,20,30,0.04);}
-    .msg.me{align-self:flex-end;background:linear-gradient(180deg,var(--accent),#0e73c7);color:white;border-bottom-right-radius:4px}
-    .msg.other{align-self:flex-start;background:linear-gradient(180deg,#ffffff,#f8fbff);color:var(--muted);border-bottom-left-radius:4px}
-    .msg .meta{font-size:11px;color:rgba(0,0,0,0.45);margin-bottom:6px}
-    .msg .text{font-size:14px;line-height:1.4}
-    .msg .time{font-size:11px;color:rgba(0,0,0,0.35);margin-top:6px;text-align:right}
+    .messages-panel{background:transparent;border-radius:10px;padding:12px;display:flex;flex-direction:column;height:520px;border:1px solid rgba(0,255,106,0.04)}
+    .messages-list{flex:1;overflow:auto;padding:8px 12px;display:flex;flex-direction:column;gap:10px}
+    .msg{max-width:75%;padding:12px 14px;border-radius:12px;backdrop-filter: blur(4px);}
+    .msg.me{align-self:flex-end;color:#001b0f}
+    .msg.other{align-self:flex-start;color:var(--neon)}
+    .msg .meta{font-size:12px;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .msg .text{font-size:14px;line-height:1.45}
 
     /* Sidebar */
-    .sidebar{background:var(--panel);border-radius:10px;padding:12px;height:520px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6)}
-    .sidebar h4{margin:4px 0 8px 0;font-size:13px}
+    .sidebar{background:linear-gradient(180deg, rgba(0,0,0,0.26), rgba(0,0,0,0.08));border-radius:10px;padding:12px;height:520px;border:1px solid rgba(0,255,106,0.03)}
+    .sidebar h4{margin:4px 0 8px 0;font-size:13px;color:var(--neon)}
     .info{font-size:13px;color:var(--muted);line-height:1.5}
 
     /* Composer */
-    .composer{display:flex;gap:10px;padding:12px 18px;border-top:1px solid #eef3f7;align-items:center}
-    .composer input{flex:1;padding:12px 14px;border-radius:10px;border:1px solid #e6eef3;background:transparent;font-size:14px}
-    .composer button{background:var(--accent);color:white;border:none;padding:10px 18px;border-radius:10px;font-weight:600;cursor:pointer}
-    .composer button.secondary{background:transparent;border:1px solid #d8e6f2;color:var(--accent)}
+    .composer{display:flex;gap:10px;padding:12px 18px;border-top:1px solid rgba(0,255,106,0.03);align-items:center}
+    .composer input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(0,255,106,0.08);background:rgba(0,0,0,0.36);color:var(--neon);font-size:14px}
+    .composer input::placeholder{color:rgba(0,255,106,0.45)}
+    .composer button{background:var(--neon);color:#001b0f;border:none;padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer}
+    .composer button.secondary{background:transparent;border:1px solid rgba(0,255,106,0.08);color:var(--neon)}
 
     /* Responsive */
     @media (max-width:880px){
@@ -84,6 +92,7 @@
         </div>
         <div class="header-actions">
           <div class="status"><span class="dot"></span><span>Connected</span></div>
+          <button id="leaveBtn" class="secondary" style="margin-left:8px;">Leave</button>
         </div>
       </div>
 
@@ -147,17 +156,20 @@
       return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
     }
 
-    // Create modal dynamically (so it's easy to show/hide)
-    let username = localStorage.getItem('chat_username') || '';
+  // Create modal dynamically (so it's easy to show/hide)
+  let username = localStorage.getItem('chat_username') || '';
+  // session management: when user 'joins' we set sessionStart; leaving clears it
+  let sessionStart = Number(localStorage.getItem('chat_session_start')) || null;
+  let unsubscribe = null;
     const modal = document.createElement('div');
     modal.style.position = 'fixed'; modal.style.inset = '0'; modal.style.display = 'flex'; modal.style.alignItems = 'center'; modal.style.justifyContent = 'center'; modal.style.background = 'rgba(10,20,30,0.45)'; modal.style.zIndex = 9999;
     modal.innerHTML = `
-      <div style="background:white;padding:20px;border-radius:12px;min-width:320px;box-shadow:0 12px 40px rgba(10,20,30,0.35);">
-        <h3 style="margin:0 0 8px 0">Enter display name</h3>
-        <p style="margin:0 0 12px 0;color:#667788;font-size:13px">Pick a name that others will see (eg. opoup)</p>
-        <input id="_usernameInput" placeholder="Your name" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef3;margin-bottom:10px;font-size:14px" />
+      <div style="background:linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.8));padding:20px;border-radius:12px;min-width:320px;box-shadow:0 12px 40px rgba(0,255,106,0.06);border:1px solid rgba(0,255,106,0.06);">
+        <h3 style="margin:0 0 8px 0;color:var(--neon)">Enter display name</h3>
+        <p style="margin:0 0 12px 0;color:var(--muted);font-size:13px">Pick a hacker handle (eg. opoup)</p>
+        <input id="_usernameInput" placeholder="Your handle" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(0,255,106,0.06);margin-bottom:10px;background:rgba(0,0,0,0.45);color:var(--neon);font-size:14px" />
         <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button id="_usernameSave" style="padding:8px 12px;border-radius:8px;background:#0b61a4;color:white;border:none">Start</button>
+          <button id="_usernameSave" style="padding:8px 12px;border-radius:8px;background:var(--neon);color:#001b0f;border:none">Boot</button>
         </div>
       </div>
     `;
@@ -169,7 +181,11 @@
     if(!username){ showModal(); } else { hideModal(); }
     usernameInput.value = username;
     usernameSave.addEventListener('click', ()=>{
-      const v = usernameInput.value.trim() || 'Guest'; username = v; localStorage.setItem('chat_username', username); hideModal();
+      const v = usernameInput.value.trim() || 'Guest'; username = v; localStorage.setItem('chat_username', username);
+      // start a new session
+      sessionStart = Date.now(); localStorage.setItem('chat_session_start', String(sessionStart));
+      hideModal();
+      startListener();
     });
     // allow Enter key in modal
     usernameInput.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ usernameSave.click(); } });
@@ -202,12 +218,16 @@
 
       // styles: colorful bubbles
       if(me){
-        wrapper.style.background = `linear-gradient(180deg, ${colorForName(author)}, ${shadeColor(colorForName(author), -12)})`;
-        wrapper.style.color = 'white';
+        // my message: dark bubble with neon accent
+        wrapper.style.background = `linear-gradient(180deg, rgba(0,36,18,0.95), rgba(0,24,12,0.98))`;
+        wrapper.style.border = `1px solid ${shadeColor(colorForName(author), -30)}`;
+        wrapper.style.color = '#c7ffd6';
         wrapper.style.alignSelf = 'flex-end';
       } else {
-        wrapper.style.background = '#fff';
-        wrapper.style.border = `1px solid ${shadeColor(colorForName(author), 60)}`;
+        // others: neon on transparent background
+        wrapper.style.background = 'transparent';
+        wrapper.style.border = `1px solid rgba(0,255,106,0.08)`;
+        wrapper.style.boxShadow = `0 6px 18px rgba(0,255,106,0.02)`;
         wrapper.style.alignSelf = 'flex-start';
       }
 
@@ -224,15 +244,27 @@
       return `rgb(${r}, ${g}, ${b})`;
     }
 
-    // Listen for new messages
-    db.collection('messages').orderBy('timestamp')
-      .onSnapshot(snapshot => {
-        messagesDiv.innerHTML = '';
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          addMessageToList(data.text, data.username || 'Guest', username, data.timestamp);
-        });
-      }, err => console.error(err));
+    // Firestore listener with session filter: only load messages created after sessionStart
+    function startListener(){
+      if(unsubscribe) unsubscribe();
+      // if we don't have a sessionStart, set it now (fresh join)
+      if(!sessionStart) { sessionStart = Date.now(); localStorage.setItem('chat_session_start', String(sessionStart)); }
+      messagesDiv.innerHTML = '';
+      // messages store client 'sessionStamp' as Date.now() when sent; filter by that
+      unsubscribe = db.collection('messages')
+        .where('sessionStamp', '>=', sessionStart)
+        .orderBy('sessionStamp')
+        .onSnapshot(snapshot => {
+          messagesDiv.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            addMessageToList(data.text, data.username || 'Guest', username, data.timestamp);
+          });
+        }, err => console.error(err));
+    }
+
+    // auto-start listener if session exists
+    if(sessionStart) startListener();
 
     // Send message
     function sendMessage(){
@@ -240,13 +272,23 @@
       const msg = input.value.trim();
       if(!msg) return;
       sendBtn.disabled = true;
-      db.collection('messages').add({ text: msg, username: username || 'Guest', timestamp: firebase.firestore.FieldValue.serverTimestamp() })
+  db.collection('messages').add({ text: msg, username: username || 'Guest', timestamp: firebase.firestore.FieldValue.serverTimestamp(), sessionStamp: Date.now() })
         .then(()=>{ input.value=''; input.focus(); sendBtn.disabled=false; })
         .catch(e=>{ console.error(e); sendBtn.disabled=false; });
     }
 
     sendBtn.addEventListener('click', sendMessage);
     input.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); } });
+
+    // Leave behavior: clear session and unsubscribe; user must rejoin to see messages
+    const leaveBtn = document.getElementById('leaveBtn');
+    leaveBtn.addEventListener('click', ()=>{
+      if(unsubscribe) unsubscribe(); unsubscribe = null;
+      sessionStart = null; localStorage.removeItem('chat_session_start');
+      messagesDiv.innerHTML = '';
+      // show modal to rejoin
+      showModal();
+    });
   </script>
 </body>
 </html>
