@@ -217,8 +217,8 @@
       const err = document.getElementById('_authError');
       // require a non-empty username (no implicit 'Guest')
       if(!v){ if(err){ err.textContent = 'Please enter a username.'; err.style.display = 'inline'; } usernameInput.style.borderColor = '#ff6b6b'; return; }
-      // enforce password exactly 'Dian'
-      if(pw !== 'Dian'){
+      // enforce password exactly 'Anu'
+      if(pw !== 'Anu'){
         if(err){ err.textContent = 'Incorrect password.'; err.style.display = 'inline'; }
         document.getElementById('_passwordInput').style.borderColor = '#ff6b6b';
         return;
@@ -380,3 +380,4 @@
   </script>
 </body>
 </html>
+
